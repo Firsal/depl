@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет — Антикафе "Лес"</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="cabinet.css">
+</head>
+<body>
+    <header class="header">
+        <div class="logo-container">
+            <img src="logo.svg" alt="Логотип антикафе Лес" class="logo-svg">
+            <h1 class="logo-text">Антикафе "Лес"</h1>
+        </div>
+        <div class="header-actions">
+            <a href="login.html" class="login-btn">Вход</a>
+            <a href="index.html" class="main-menu-btn">На главную</a>
+        </div>
+    </header>
+    <div class="cabinet-section">
+        <h2>Мои бронирования</h2>
+        <ul id="bookingList" class="booking-list"></ul>
+        <hr>
+        <h2>Любимые настольные игры</h2>
+        <ul id="favGames" class="fav-games-list"></ul>
+        <form id="addGameForm" style="display:flex;gap:10px;align-items:center;">
+            <input type="text" id="newGame" placeholder="Добавить игру..." required style="flex:1;min-width:0;">
+            <button type="submit">Добавить</button>
+        </form>
+        <span id="favMsg"></span>
+    </div>
+    <script src="script.js"></script>
+    <script>
+    async function fetchFavGames() {
+        const res = await fetch('cabinet.php?action=get_favorites');
+        const data = await res.json();
+        const list = document.getElementById('favGames');
+        list.innerHTML = '';
+        if (data.success) {
+            data.games.forEach(game => {
+                const li = document.createElement('li');
+                li.textContent = game.game_name;
+                const btn = document.createElement('button');
+                btn.textContent = 'Удалить';
+                btn.className = 'cabinet-btn';
+                btn.onclick = async () => {
+                    await fetch('cabinet.php?action=delete_favorite&id=' + game.id);
+                    fetchFavGames();
+                };
+                li.appendChild(btn);
+                list.appendChild(li);
+            });
+        }
+    }
+    async function addGame(e) {
+        e.preventDefault();
+        const game = document.getElementById('newGame').value;
+        const res = await fetch('cabinet.php?action=add_favorite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ game_name: game })
+        });
+        const data = await res.json();
+        document.getElementById('favMsg').textContent = data.message;
+        document.getElementById('newGame').value = '';
+        fetchFavGames();
+    }
+    async function fetchBookings() {
+        const res = await fetch('cabinet.php?action=get_bookings');
+        const data = await res.json();
+        const list = document.getElementById('bookingList');
+        list.innerHTML = '';
+        if (data.success) {
+            const today = new Date().toISOString().split('T')[0];
+            const future = [];
+            const past = [];
+            data.bookings.forEach(b => {
+                if (b.booking_date >= today) future.push(b);
+                else past.push(b);
+            });
+            // Сортировка по дате и времени убыванию
+            function sortDesc(a, b) {
+                return b.id - a.id;
+            }
+            future.sort(sortDesc);
+            past.sort(sortDesc);
+            [...future, ...past].forEach(b => {
+                const li = document.createElement('li');
+                let statusText = '';
+                if (b.status === 'pending') statusText = ' (ожидает подтверждения)';
+                else if (b.status === 'confirmed') statusText = ' (подтверждена)';
+                else if (b.status === 'cancelled') statusText = ' (отменена)';
+                li.textContent = `Столик #${b.table_number}, ${b.booking_date} с ${b.time_from} до ${b.time_to}${statusText}`;
+                list.appendChild(li);
+            });
+        }
+    }
+    fetchFavGames();
+    fetchBookings();
+    document.getElementById('addGameForm').onsubmit = addGame;
+    </script>
+</body>
+</html> 

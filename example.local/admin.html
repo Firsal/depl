@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель — Бронирования</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="logo-container">
+            <img src="logo.svg" alt="Логотип антикафе Лес" class="logo-svg">
+            <h1 class="logo-text">Антикафе "Лес"</h1>
+        </div>
+        <div class="header-actions">
+            <a href="login.html" class="login-btn">Вход</a>
+            <a href="index.html" class="main-menu-btn">На главную</a>
+        </div>
+    </header>
+    <div class="admin-section" style="margin-top:90px;">
+        <h2>Управление бронированиями</h2>
+        <table id="bookingsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Столик</th>
+                    <th>Имя</th>
+                    <th>Дата</th>
+                    <th>Время</th>
+                    <th>Время подачи</th>
+                    <th>Телефон</th>
+                    <th>Комментарий</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div id="bookingsCards" style="display:none;"></div>
+        <div id="adminMsg" style="margin-top:18px;color:#234b36;font-weight:600;"></div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+    async function fetchBookings() {
+        const res = await fetch('admin_api.php?entity=booking');
+        const data = await res.json();
+        const tbody = document.querySelector('#bookingsTable tbody');
+        const cards = document.getElementById('bookingsCards');
+        tbody.innerHTML = '';
+        cards.innerHTML = '';
+        const isMobile = window.innerWidth <= 600;
+        if (data.success) {
+            const today = new Date().toISOString().split('T')[0];
+            const future = [];
+            const past = [];
+            data.bookings.forEach(b => {
+                if (b.booking_date >= today) future.push(b);
+                else past.push(b);
+            });
+            function sortDesc(a, b) { return b.id - a.id; }
+            future.sort(sortDesc);
+            past.sort(sortDesc);
+            const all = [...future, ...past];
+            if (isMobile) {
+                document.getElementById('bookingsTable').style.display = 'none';
+                cards.style.display = 'block';
+                all.forEach(b => {
+                    const card = document.createElement('div');
+                    card.className = 'admin-booking-card';
+                    card.innerHTML = `
+                        <div class="card-row"><span class="card-label">ID</span><span class="card-value">${b.id}</span></div>
+                        <div class="card-row"><span class="card-label">Столик</span><span class="card-value">${b.table_number}</span></div>
+                        <div class="card-row"><span class="card-label">Имя</span><span class="card-value">${b.name || '-'}</span></div>
+                        <div class="card-row"><span class="card-label">Дата</span><span class="card-value">${b.booking_date}</span></div>
+                        <div class="card-row"><span class="card-label">Время</span><span class="card-value">${b.time_from} - ${b.time_to}</span></div>
+                        <div class="card-row"><span class="card-label">Время подачи</span><span class="card-value">${formatDateTime(b.created_at)}</span></div>
+                        <div class="card-row"><span class="card-label">Телефон</span><span class="card-value">${b.phone}</span></div>
+                        <div class="card-row"><span class="card-label">Комментарий</span><span class="card-value">${b.comments || '-'}</span></div>
+                        <div class="card-row"><span class="card-label">Статус</span><span class="card-value status-${b.status}">${b.status === 'pending' ? 'Ожидает' : b.status === 'confirmed' ? 'Подтверждена' : 'Отменена'}</span></div>
+                        <div class="card-actions">
+                            ${b.status === 'pending' ? `<button class="admin-btn confirm" onclick="confirmBooking(${b.id})">Подтвердить</button>` : ''}
+                            ${b.status !== 'cancelled' ? `<button class="admin-btn delete" onclick="deleteBooking(${b.id})">Удалить</button>` : ''}
+                            ${b.status === 'cancelled' ? `<button class="admin-btn delete" onclick="deleteBooking(${b.id}, true)">Удалить навсегда</button>` : ''}
+                        </div>
+                    `;
+                    cards.appendChild(card);
+                });
+            } else {
+                document.getElementById('bookingsTable').style.display = '';
+                cards.style.display = 'none';
+                all.forEach(b => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${b.id}</td>
+                        <td>${b.table_number}</td>
+                        <td>${b.name || '-'}</td>
+                        <td>${b.booking_date}</td>
+                        <td>${b.time_from} - ${b.time_to}</td>
+                        <td>${formatDateTime(b.created_at)}</td>
+                        <td>${b.phone}</td>
+                        <td>${b.comments || '-'}</td>
+                        <td class="status-${b.status}">${b.status === 'pending' ? 'Ожидает' : b.status === 'confirmed' ? 'Подтверждена' : 'Отменена'}</td>
+                        <td>
+                            ${b.status === 'pending' ? `<button class="admin-btn confirm" onclick="confirmBooking(${b.id})">Подтвердить</button>` : ''}
+                            ${b.status !== 'cancelled' ? `<button class="admin-btn delete" onclick="deleteBooking(${b.id})">Удалить</button>` : ''}
+                            ${b.status === 'cancelled' ? `<button class="admin-btn delete" onclick="deleteBooking(${b.id}, true)">Удалить навсегда</button>` : ''}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+    }
+    async function confirmBooking(id) {
+        const res = await fetch('admin_api.php?entity=booking', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        const data = await res.json();
+        document.getElementById('adminMsg').textContent = data.message;
+        fetchBookings();
+    }
+    async function deleteBooking(id, force) {
+        if (force) {
+            if (!confirm('Удалить бронь навсегда?')) return;
+        } else {
+            if (!confirm('Точно отменить бронь?')) return;
+        }
+        const url = 'admin_api.php?entity=booking&id=' + id + (force ? '&force=1' : '');
+        const res = await fetch(url, {
+            method: 'DELETE'
+        });
+        const data = await res.json();
+        document.getElementById('adminMsg').textContent = data.message;
+        fetchBookings();
+    }
+    fetchBookings();
+    window.addEventListener('resize', fetchBookings);
+    // Форматирование даты и времени
+    function formatDateTime(dt) {
+        if (!dt) return '-';
+        const d = new Date(dt.replace(' ', 'T'));
+        if (isNaN(d)) return dt;
+        return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' }) + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
+    </script>
+</body>
+</html> 

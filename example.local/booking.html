@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бронирование столика - Антикафе "Лес"</title>
+    <link rel="icon" href="logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="booking.css">
+</head>
+<body>
+    <header class="header">
+        <div class="logo-container">
+            <img src="logo.svg" alt="Логотип антикафе Лес" class="logo-svg">
+            <h1 class="logo-text">Антикафе "Лес"</h1>
+        </div>
+        <div class="header-actions">
+            <a href="login.html" class="login-btn">Вход</a>
+            <a href="index.html" class="main-menu-btn">На главную</a>
+        </div>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <ul class="nav-list">
+            <li><a href="index.html#about" class="nav-link">О нас</a></li>
+            <li><a href="index.html#services" class="nav-link">Услуги</a></li>
+            <li><a href="index.html#promo" class="nav-link">Акции и предложения</a></li>
+            <li><a href="index.html#events" class="nav-link">Мероприятия</a></li>
+            <li><a href="index.html#contacts" class="nav-link">Контакты</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <section class="booking-section">
+            <h2>Бронирование столика</h2>
+            
+            <div class="booking-container">
+                <div class="table-map">
+                    <div class="table-map-container">
+                        <svg id="cafe-map" viewBox="0 0 900 700" width="100%" height="auto">
+                          <!-- Стол 1 -->
+                          <g class="table-group" data-table="1">
+                            <rect x="220" y="350" width="80" height="160" rx="15" fill="#d9a86c" stroke="#333" stroke-width="3"/>
+                            <text x="260" y="430" font-size="20" fill="#fff" text-anchor="middle" alignment-baseline="middle">Стол 1</text>
+                          </g>
+                          <!-- Стол 2 -->
+                          <g class="table-group" data-table="2">
+                            <rect x="520" y="350" width="80" height="160" rx="15" fill="#d9a86c" stroke="#333" stroke-width="3"/>
+                            <text x="560" y="430" font-size="20" fill="#fff" text-anchor="middle" alignment-baseline="middle">Стол 2</text>
+                          </g>
+                          <!-- Стол 3 -->
+                          <g class="table-group" data-table="3">
+                            <rect x="220" y="120" width="80" height="160" rx="15" fill="#d9a86c" stroke="#333" stroke-width="3"/>
+                            <text x="260" y="200" font-size="20" fill="#fff" text-anchor="middle" alignment-baseline="middle">Стол 3</text>
+                          </g>
+                          <!-- Стол 4 -->
+                          <g class="table-group" data-table="4">
+                            <rect x="520" y="120" width="80" height="160" rx="15" fill="#d9a86c" stroke="#333" stroke-width="3"/>
+                            <text x="560" y="200" font-size="20" fill="#fff" text-anchor="middle" alignment-baseline="middle">Стол 4</text>
+                          </g>
+                          <!-- Стол 5 (большая стойка) -->
+                          <g class="table-group" data-table="5">
+                            <rect x="180" y="30" width="500" height="60" rx="20" fill="#d9a86c" stroke="#333" stroke-width="3"/>
+                            <text x="430" y="65" font-size="20" fill="#fff" text-anchor="middle" alignment-baseline="middle">Стол 5</text>
+                          </g>
+                        </svg>
+                    </div>
+                    <div class="table-legend">
+                        <div class="legend-item">
+                            <div class="legend-color available"></div>
+                            <span>Доступен</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color selected"></div>
+                            <span>Выбран</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color booked"></div>
+                            <span>Занят</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color pending"></div>
+                            <span>В ожидании</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="booking-form">
+                    <form id="bookingForm">
+                        <input type="hidden" id="selectedTable" name="selectedTable" required>
+                        
+                        <div class="form-group">
+                            <label for="date">Дата:</label>
+                            <input type="date" id="date" name="date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="time">Время:</label>
+                            <input type="time" id="time" name="time" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="duration">Длительность:</label>
+                            <select id="duration" name="duration" required>
+                                <option value="1">1 час</option>
+                                <option value="2">2 часа</option>
+                                <option value="3">3 часа</option>
+                                <option value="4">4 часа</option>
+                                <option value="5">5 часов</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">Телефон:</label>
+                            <input type="tel" id="phone" name="phone" required pattern="^[- +()0-9]{10,20}$" minlength="10" maxlength="20" placeholder="+7 (999) 123-45-67">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="comments">Комментарии:</label>
+                            <textarea id="comments" name="comments" rows="3"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn">Забронировать</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+    <script src="booking.js"></script>
+</body>
+</html> 
